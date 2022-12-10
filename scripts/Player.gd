@@ -6,12 +6,22 @@ extends KinematicBody2D
 enum STATES {IDLE, WALKING, POWERING, ATTACKING}
 
 
-const ACCELERATION = 300
+const ACCELERATION = 30
 const MAX_SPEED = 400
 const FRICTION = .1
 
+# camera offsets for front and back lanes
+const FORWARD_LANE = 180
+const BACK_LANE = -10
+
+
+# main state variable
 var state : int = STATES.IDLE
+
+# lane toggle
 var isFront : bool = false
+
+var forwardSpeed : float = 1
 
 # store most recent non-zero movement input for setting attack direction
 var velocity : Vector2 = Vector2.ZERO
@@ -33,6 +43,8 @@ func _physics_process(delta) -> void:
 	match state:
 		STATES.IDLE: idle(delta)
 		STATES.WALKING: walking(delta)
+	self.position.x += forwardSpeed
+	cameraNode.position.x += forwardSpeed
 
 
 
@@ -40,10 +52,10 @@ func changeLane() -> void:
 	# change lane
 	if isFront:
 		isFront = false
-		cameraNode.offset.x = -60
+		cameraNode.offset.x = BACK_LANE
 	else:
 		isFront = true
-		cameraNode.offset.x = 140
+		cameraNode.offset.x = FORWARD_LANE
 
 
 func readButtons() -> void:
@@ -66,12 +78,13 @@ func walking(delta) -> void:
 	var _i = readMovement()
 	readButtons()
 	if _i != Vector2.ZERO:
+		var _nv : Vector2 = Vector2(0, _i.y)
 		lastVelocity = _i
-		velocity = move_and_slide(_i * MAX_SPEED)
+		velocity = move_and_slide(_nv * MAX_SPEED)
 		cameraNode.position.x = self.position.x
 
 	else:
-		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta)
+		velocity = velocity.move_toward(Vector2(ACCELERATION, 0), FRICTION * delta)
 		state = STATES.IDLE
 
 
@@ -81,5 +94,5 @@ func idle(delta) -> void:
 	if _i != Vector2.ZERO:
 		state = STATES.WALKING
 	else:
-		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta)
+		velocity = velocity.move_toward(Vector2(ACCELERATION, 0), FRICTION * delta)
 
