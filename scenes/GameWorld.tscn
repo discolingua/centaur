@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=1]
+[ext_resource path="res://sprites/scrollbg1.png" type="Texture" id=2]
+
+[node name="GameWorld" type="Node2D"]
+
+[node name="RootCamera" type="Camera2D" parent="."]
+position = Vector2( 72, 120 )
+offset = Vector2( 90, 0 )
+current = true
+
+[node name="Player" parent="." instance=ExtResource( 1 )]
+position = Vector2( 78, 138 )
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+scroll_limit_begin = Vector2( -999999, 0 )
+scroll_limit_end = Vector2( 999999, 0 )
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2( 0.4, 1 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/ParallaxLayer"]
+position = Vector2( 1457, 97 )
+scale = Vector2( 3, 0.8 )
+texture = ExtResource( 2 )
