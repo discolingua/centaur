@@ -9,12 +9,18 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "",
+"class": "GitAPI",
+"language": "NativeScript",
+"path": "res://addons/godot-git-plugin/git_api.gdns"
+}, {
 "base": "KinematicBody2D",
 "class": "Player",
 "language": "GDScript",
 "path": "res://scripts/Player.gd"
 } ]
 _global_script_class_icons={
+"GitAPI": "",
 "Player": ""
 }
 
@@ -29,6 +35,12 @@ config/icon="res://icon.png"
 window/size/width=320
 window/size/height=240
 window/size/resizable=false
+window/size/test_width=960
+window/size/test_height=720
+
+[gdnative]
+
+singletons=[ "res://addons/godot-git-plugin/git_api.gdnlib" ]
 
 [gui]
 

@@ -108,3 +108,13 @@ func idle(delta) -> void:
 	else:
 		velocity = velocity.move_toward(Vector2(0, 0), FRICTION * delta)
 
+
+func _input(event):
+	# Bow aiming
+	if event is InputEventMouseMotion: 
+		# set projectile spawn point between player and mouse
+		var angle = get_angle_to(get_global_mouse_position())
+		$Shoulder/BowLoc.position =  Vector2(cos(angle), sin(angle)) * 15
+		#print("Mouse Motion at: ", event.position)
+		print("Bow Angle: ", rad2deg(angle) )
+		$Shoulder/BowLoc/BowSprite.rotation_degrees = rad2deg(angle+135)
