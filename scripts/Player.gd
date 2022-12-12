@@ -3,7 +3,10 @@ extends KinematicBody2D
 
 
 # list of state machine states
-enum STATES {IDLE, WALKING, POWERING, ATTACKING}
+enum STATES {IDLE, WALKING, SHOOTING,}
+
+# scene for arrow instances
+const Arrow = preload("res://scenes/Arrow.tscn")
 
 # movement speeds, this primarily affects the Y axis since X autoscrolls forward
 const ACCELERATION = 30
@@ -21,11 +24,17 @@ const BOTTOM_EDGE = 170
 # main state variable
 var state : int = STATES.IDLE
 
+
+var lastState : int = STATES.IDLE
+
 # lane toggle
 var isFront : bool = false
 
 # forward scrolling speed
 var forwardSpeed : float = 1.0
+
+# current bow angle
+var bowAngle : float = 0.0
 
 # store most recent non-zero movement input for setting attack direction
 var velocity : Vector2 = Vector2.ZERO
@@ -42,13 +51,26 @@ func _ready() -> void:
 	changeLane()
 
 
+func _input(event):
+	# Bow aiming
+	if event is InputEventMouseMotion:
+		# set projectile spawn point between player and mouse
+		bowAngle = get_angle_to(get_global_mouse_position())
+		$Shoulder/BowLoc.position =  Vector2(cos(bowAngle), sin(bowAngle)) * 15
+		#print("Mouse Motion at: ", event.position)
+		print("Bow Angle: ", rad2deg(bowAngle) )
+		$Shoulder/BowLoc/BowSprite.rotation_degrees = rad2deg(bowAngle + 135)
+
+	# action buttons are handled by readButtons() which is called by the state machine
+	# system buttons (pause, menu) can be handled here because they are state independent
+
 
 func _physics_process(delta) -> void:
-
 	# call a state-specific function
 	match state:
-		STATES.IDLE: idle(delta)
-		STATES.WALKING: walking(delta)
+		STATES.IDLE: _stateIdle(delta)
+		STATES.SHOOTING: _stateShoot(delta)
+		STATES.WALKING: _stateWalking(delta)
 
 	# scroll camera + player forward no matter what state
 	self.position.x += forwardSpeed
@@ -70,8 +92,13 @@ func changeLane() -> void:
 
 # read action buttons (expand to add shooting, etc.)
 func readButtons() -> void:
+	# space bar or right mouse button
 	if Input.is_action_just_pressed("ui_accept"):
 		changeLane()
+	# Z or left mouse button
+	if Input.is_action_just_pressed("ui_select"):
+		lastState = state
+		state = STATES.SHOOTING
 
 
 # return normalized movement input from keyboard or gamepad
@@ -85,22 +112,8 @@ func readMovement() -> Vector2:
 	return _i
 
 
-# state function for player moving vertically
-func walking(delta) -> void:
-	var _i = readMovement()
-	readButtons()
-	if _i != Vector2.ZERO:
-		var _nv : Vector2 = Vector2(0, _i.y)
-		lastVelocity = _i
-		velocity = move_and_slide(_nv * MAX_SPEED)
-
-	else:
-		velocity = velocity.move_toward(Vector2(0, 0), FRICTION * delta)
-		state = STATES.IDLE
-
-
 # state function for no input
-func idle(delta) -> void:
+func _stateIdle(delta) -> void:
 	var _i = readMovement()
 	readButtons()
 	if _i != Vector2.ZERO:
@@ -109,12 +122,29 @@ func idle(delta) -> void:
 		velocity = velocity.move_toward(Vector2(0, 0), FRICTION * delta)
 
 
-func _input(event):
-	# Bow aiming
-	if event is InputEventMouseMotion: 
-		# set projectile spawn point between player and mouse
-		var angle = get_angle_to(get_global_mouse_position())
-		$Shoulder/BowLoc.position =  Vector2(cos(angle), sin(angle)) * 15
-		#print("Mouse Motion at: ", event.position)
-		print("Bow Angle: ", rad2deg(angle) )
-		$Shoulder/BowLoc/BowSprite.rotation_degrees = rad2deg(angle+135)
+func _stateShoot(_delta) -> void:
+	# create arrow instance
+	var _arrow = Arrow.instance()
+	# set position to player's shoulder
+	_arrow.position = self.position + Vector2(0, -10)
+	# set velocity to last non-zero movement input
+	_arrow.velocity = lastVelocity
+	# add to scene
+	get_parent().add_child(_arrow)
+	# reset state
+	lastState = state
+	state = STATES.IDLE
+
+
+# state function for player moving vertically
+func _stateWalking(delta) -> void:
+	var _i = readMovement()
+	readButtons()
+	if _i != Vector2.ZERO:
+		var _nv : Vector2 = Vector2(0, _i.y)
+		lastVelocity = _i
+		velocity = move_and_slide(_nv * MAX_SPEED)
+	else:
+		velocity = velocity.move_toward(Vector2(0, 0), FRICTION * delta)
+		lastState = state
+		state = STATES.IDLE
