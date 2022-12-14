@@ -30,6 +30,10 @@ config/name="centaur"
 run/main_scene="res://scenes/GameWorld.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+WorldAudio="*res://scripts/WorldAudio.gd"
+
 [display]
 
 window/size/width=320

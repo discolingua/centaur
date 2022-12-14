@@ -116,6 +116,7 @@ func _stateIdle(delta) -> void:
 	readButtons()
 	if _i != Vector2.ZERO:
 		print("Moving")
+		lastState = state
 		state = STATES.WALKING
 	else:
 		velocity = velocity.move_toward(Vector2(0, 0), FRICTION * delta)
