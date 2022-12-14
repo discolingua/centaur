@@ -32,6 +32,9 @@ var isFront : bool = false
 
 # forward scrolling speed
 var forwardSpeed : float = 1.0
+var targetSpeed : float = forwardSpeed
+var xAccel : float = .1
+var xMaxSpeed = 50
 
 # current bow angle
 var bowAngle : float = 0.0
@@ -74,7 +77,27 @@ func _physics_process(delta) -> void:
 
 	# clamp vertical movement
 	self.position.y = clamp(self.position.y, 0, BOTTOM_EDGE)
+	
+	# accel/decel towards target speed
+	speedControl(delta)
+	
 
+func speedControl(delta) -> void:
+	var _i = readMovement()
+	readButtons()
+	
+	#right/left sets target speed, forwardSpeed will slowly
+	#change until it meets targetSpeed
+	targetSpeed += _i.x
+	targetSpeed = clamp(targetSpeed, 0, xMaxSpeed) 
+	
+	#set speed
+	if (forwardSpeed < targetSpeed):
+		forwardSpeed += xAccel
+	elif (forwardSpeed > targetSpeed):
+		forwardSpeed -= xAccel
+	forwardSpeed = clamp(forwardSpeed, 0, xMaxSpeed) 
+	print(forwardSpeed, "/", targetSpeed)
 
 # toggle between front and back lanes
 func changeLane() -> void:
