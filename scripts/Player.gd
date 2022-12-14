@@ -26,14 +26,10 @@ var isFront : bool = false
 
 # forward scrolling speed
 var forwardSpeed : float = 1.0
-var xAccel: float = .1
 
 # store most recent non-zero movement input for setting attack direction
 var velocity : Vector2 = Vector2.ZERO
 var lastVelocity : Vector2 = Vector2.ZERO
-
-# variables controlling movement
-var targetSpeed : int = forwardSpeed
 
 # reference to HUD components
 onready var cameraNode : Node = get_node("/root/GameWorld/RootCamera")
@@ -54,21 +50,12 @@ func _physics_process(delta) -> void:
 		STATES.IDLE: idle(delta)
 		STATES.WALKING: walking(delta)
 
-	# accel/decel towards target speed
-	speedControl(delta)
-	if (forwardSpeed < targetSpeed):
-		forwardSpeed += xAccel
-	elif (forwardSpeed > targetSpeed):
-		forwardSpeed -= xAccel
-	print(forwardSpeed, "/", targetSpeed)
-
 	# scroll camera + player forward no matter what state
 	self.position.x += forwardSpeed
 	cameraNode.position.x += forwardSpeed
 
 	# clamp vertical movement
 	self.position.y = clamp(self.position.y, 0, BOTTOM_EDGE)
-
 
 
 # toggle between front and back lanes
@@ -111,13 +98,6 @@ func walking(delta) -> void:
 		velocity = velocity.move_toward(Vector2(0, 0), FRICTION * delta)
 		state = STATES.IDLE
 
-# function for controlling player target speed
-func speedControl(delta) -> void:
-	var _i = readMovement()
-	readButtons()
-	targetSpeed += _i.x
-	targetSpeed = clamp(targetSpeed, 0, 50) #test numbers
-
 
 # state function for no input
 func idle(delta) -> void:
@@ -138,13 +118,3 @@ func _input(event):
 		#print("Mouse Motion at: ", event.position)
 		print("Bow Angle: ", rad2deg(angle) )
 		$Shoulder/BowLoc/BowSprite.rotation_degrees = rad2deg(angle+135)
-		
-	if event is InputEventMouseButton:
-		#print("Mouse Click/Unclick at: ", event.position)
-		fire_arrow()
-		
-func fire_arrow():
-	#if reload timer not active
-		#create arrow projectile at angle of bow
-		#start reload timer
-		print ("Arrow Fired")
