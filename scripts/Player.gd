@@ -17,7 +17,6 @@ const BACK_LANE = -30
 # lower edge of the playfield
 const BOTTOM_EDGE = 170
 
-
 # main state variable
 var state : int = STATES.IDLE
 
@@ -26,6 +25,9 @@ var isFront : bool = false
 
 # forward scrolling speed
 var forwardSpeed : float = 1.0
+var targetSpeed : float = forwardSpeed
+var xAccel : float = .1
+var xMaxSpeed = 50
 
 # store most recent non-zero movement input for setting attack direction
 var velocity : Vector2 = Vector2.ZERO
@@ -57,6 +59,15 @@ func _physics_process(delta) -> void:
 	# clamp vertical movement
 	self.position.y = clamp(self.position.y, 0, BOTTOM_EDGE)
 
+	# accel/decel towards target speed
+	speedControl(delta)
+	if (forwardSpeed < targetSpeed):
+		forwardSpeed += xAccel
+	elif (forwardSpeed > targetSpeed):
+		forwardSpeed -= xAccel
+	forwardSpeed = clamp(forwardSpeed, 0, xMaxSpeed) #magic test numbers
+	print(forwardSpeed, "/", targetSpeed)
+
 
 # toggle between front and back lanes
 func changeLane() -> void:
@@ -73,6 +84,12 @@ func readButtons() -> void:
 	if Input.is_action_just_pressed("ui_accept"):
 		changeLane()
 
+# function for controlling player target speed
+func speedControl(delta) -> void:
+	var _i = readMovement()
+	readButtons()
+	targetSpeed += _i.x
+	targetSpeed = clamp(targetSpeed, 0, xMaxSpeed) #test numbers
 
 # return normalized movement input from keyboard or gamepad
 func readMovement() -> Vector2:
